@@ -7,7 +7,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setDefaultPermission(true)
     .setName("queue")
-    .setDescription("Returns the current setlist."),
+    .setDescription("Returns the current queue of tracks."),
   execute: async function ({ interaction, subscription }: CommandOptions) {
     if (subscription) {
       const current =

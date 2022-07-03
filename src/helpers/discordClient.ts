@@ -42,8 +42,6 @@ class DiscordClient {
   }
 
   initCommands() {
-    console.log("init commands has fired!");
-
     const filenames = readdirSync(resolve(".", "build", "commands"));
     const commands: any[] = [];
 

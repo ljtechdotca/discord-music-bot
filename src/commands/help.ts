@@ -1,6 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { CommandOptions } from "../helpers/discordClient";
-import createEmbed from "../_old/create-embed.old";
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -13,23 +12,21 @@ module.exports = {
       option
         .setName("command-name")
         .setDescription("Display help information on this command.")
+        .setRequired(true)
     ),
   execute: async function ({ commands, interaction }: CommandOptions) {
     let commandName = interaction.options.getString("command-name");
-    let content = this.data.description;
 
     if (commandName && commands.get(commandName)) {
-      content = commands.get(commandName).data.description;
+      interaction.reply(commands.get(commandName).data.description);
+    } else {
+      const items: any[] = [];
+
+      commands.forEach(({ data: { name, description } }) => {
+        items.push(`- \`${name}\` : ${description}`);
+      });
+
+      interaction.reply(items.join("\n"));
     }
-
-    const embed = createEmbed(
-      content,
-      [],
-      `${interaction.user.username} used /help`
-    );
-
-    interaction.reply({
-      embeds: [embed],
-    });
   },
 };
