@@ -1,18 +1,21 @@
-✔ install chalk @done(22-07-03 14:59)
 
-✔ handle commands across multiple servers @done(22-07-03 14:59)
+✔ remove embeds or make them better @done(22-07-03 17:38)
 
-✔ console logging improvements @done(22-07-03 14:59)
+✔ remove the _old @done(22-07-03 17:08)
 
-☐ track the bangers
-    - tracks.json
-☐ remove embeds or make them better
-☐ remove the _old
-☐ make a bangers command
+☐ @today make a bangers command
     /bangers will give you the top tracks in tracks.json
         top tracks are ~10 most requested tracks
-☐ /random track
-    plays a randomly selected track from tracks.json
 
-☐ handle playlist urls
-☐ handle title option on /play
+☐ @today track the bangers
+    update the tacks.json file whenever a song is played
+
+☐ @today /random track
+    plays a randomly selected track from tracks.json
+    update the README.md
+
+
+☐ @low handle playlist urls
+    if a URL is a youtube playlist, it could play multiple songs
+
+☐ @low handle title option on /play
