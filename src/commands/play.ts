@@ -1,7 +1,14 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { Collection, CommandInteraction } from "discord.js";
-import Player from "../builders/player";
-import createEmbed from "../helpers/create-embed";
+import {
+  DiscordGatewayAdapterCreator,
+  entersState,
+  joinVoiceChannel,
+  VoiceConnectionStatus,
+} from "@discordjs/voice";
+import { GuildMember } from "discord.js";
+import { CommandOptions } from "../helpers/discordClient";
+import MusicSubscription from "../helpers/subscription";
+import Track from "../helpers/track";
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -9,46 +16,87 @@ module.exports = {
     .setName("play")
     .setDescription("Queues up a new track.")
     .addStringOption((option) =>
-      option.setName("title").setDescription("Queue a YouTube video via title.")
-    )
-    .addStringOption((option) =>
-      option.setName("url").setDescription("Queue a YouTube video via URL.")
+      option
+        .setName("url")
+        .setDescription("The URL of the song to play.")
+        .setRequired(true)
     ),
-  execute: async function (
-    commands: Collection<string, any>,
-    event: CommandInteraction,
-    player: Player
-  ) {
-    try {
-      // @todo : currently removed the option to query via video title
-      // let title = event.options.getString("title");
-      let url = event.options.getString("url") as string;
-      let content = "Nothing was added.";
-      const member = event.member;
-      const guild = event.guild;
-      const channelId = event.channelId;
+  execute: async function ({
+    interaction,
+    subscription,
+    subscriptions,
+  }: CommandOptions) {
+    await interaction.deferReply();
 
-      if (!guild || !guild.available)
-        throw new Error("No guild is not available.");
+    // @todo : currently removed the option to query via video title
+    let url = interaction.options.getString("url") as string;
 
-      const track = await player.play(channelId, guild, url);
+    if (!subscription) {
+      if (
+        interaction.member instanceof GuildMember &&
+        interaction.member.voice.channel &&
+        interaction.guildId
+      ) {
+        const channel = interaction.member.voice.channel;
 
-      content = `Adding "${track.title}" to Player Queue`;
+        subscription = new MusicSubscription(
+          joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild
+              .voiceAdapterCreator as DiscordGatewayAdapterCreator,
+          })
+        );
 
-      const embed = createEmbed(
-        content,
-        [
-          { name: "Duration", value: track.duration, inline: true },
-          { name: "Requested By", value: event.user.username, inline: true },
-        ],
-        `${event.user.username} used /play`
+        subscription.voiceConnection.on("error", console.warn);
+
+        subscriptions.set(interaction.guildId, subscription);
+      }
+    }
+
+    if (!subscription) {
+      await interaction.editReply(
+        "Join a voice channel and then try that again!"
       );
+      return;
+    }
 
-      event.reply({
-        embeds: [embed],
-      });
+    try {
+      await entersState(
+        subscription.voiceConnection,
+        VoiceConnectionStatus.Ready,
+        20e3
+      );
     } catch (error) {
-      console.error(error);
+      console.warn(error);
+      await interaction.editReply(
+        "Failed to join voice channel within 20 seconds, please try again later!"
+      );
+      return;
+    }
+
+    try {
+      const track = await Track.from(url, {
+        onStart() {
+          interaction.editReply("Now playing!").catch(console.warn);
+        },
+        onFinish() {
+          interaction.editReply("Now finished").catch(console.warn);
+        },
+        onError(error: Error) {
+          console.warn(error);
+          interaction.editReply(`Error: ${error.message}`).catch(console.warn);
+        },
+      });
+
+      subscription.enqueue(track);
+
+      await interaction.editReply(`Enqueued **${track.title}**`);
+    } catch (error) {
+      console.warn(error);
+      await interaction.editReply(
+        "Failed to play track, please try again later!"
+      );
     }
   },
 };

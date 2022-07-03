@@ -1,15 +1,18 @@
-☐ @high fix the play feature
-    - add subscription property
-    - on connect() method the voiceConnection subscribe to audioPlayer
-    - createAudioPlayer()
-        - handle on events: idle, autopaused, buffering, error
+✔ install chalk @done(22-07-03 14:59)
 
-☐ @low create-track has a title method that does nothing.
-    - needs to make a query to youtube API and return the top video as a url
-    // title === "rickroll"
-    // youtube search "rickroll"
-    // first video result === "Rick Astley - Never Gonna Give You Up"
-    // return a repsonse, that response will have a url im pretty sure
+✔ handle commands across multiple servers @done(22-07-03 14:59)
 
-        - extra note : the create-track url() method reads from json cache and increments song values
-        // this needs to be abstracted out so it can be used in the title() method
+✔ console logging improvements @done(22-07-03 14:59)
+
+☐ track the bangers
+    - tracks.json
+☐ remove embeds or make them better
+☐ remove the _old
+☐ make a bangers command
+    /bangers will give you the top tracks in tracks.json
+        top tracks are ~10 most requested tracks
+☐ /random track
+    plays a randomly selected track from tracks.json
+
+☐ handle playlist urls
+☐ handle title option on /play

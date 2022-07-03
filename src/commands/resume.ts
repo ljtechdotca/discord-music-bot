@@ -4,12 +4,12 @@ import { CommandOptions } from "../helpers/discordClient";
 module.exports = {
   data: new SlashCommandBuilder()
     .setDefaultPermission(true)
-    .setName("skip")
-    .setDescription("Skips the current track."),
+    .setName("resume")
+    .setDescription("Resumes the current track."),
   execute: async function ({ interaction, subscription }: CommandOptions) {
     if (subscription) {
-      subscription.audioPlayer.stop();
-      await interaction.reply("Skipped song!");
+      subscription.audioPlayer.unpause();
+      await interaction.reply({ content: "Unpaused!", ephemeral: true });
     } else {
       await interaction.reply("Not playing in this server!");
     }

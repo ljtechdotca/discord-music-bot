@@ -1,7 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { Collection, CommandInteraction } from "discord.js";
-import Player from "../builders/player";
-import createEmbed from "../helpers/create-embed";
+import { CommandOptions } from "../helpers/discordClient";
+import createEmbed from "../_old/create-embed.old";
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -15,21 +14,21 @@ module.exports = {
         .setName("command-name")
         .setDescription("Display help information on this command.")
     ),
-  execute: async function (
-    commands: Collection<string, any>,
-    event: CommandInteraction,
-    player: Player
-  ) {
-    let commandName = event.options.getString("command-name");
+  execute: async function ({ commands, interaction }: CommandOptions) {
+    let commandName = interaction.options.getString("command-name");
     let content = this.data.description;
 
     if (commandName && commands.get(commandName)) {
       content = commands.get(commandName).data.description;
     }
 
-    const embed = createEmbed(content, [], `${event.user.username} used /help`);
+    const embed = createEmbed(
+      content,
+      [],
+      `${interaction.user.username} used /help`
+    );
 
-    event.reply({
+    interaction.reply({
       embeds: [embed],
     });
   },

@@ -1,39 +1,31 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { Collection, CommandInteraction } from "discord.js";
-import Player from "../builders/player";
-import createEmbed from "../helpers/create-embed";
+import { AudioPlayerStatus, AudioResource } from "@discordjs/voice";
+import { CommandOptions } from "../helpers/discordClient";
+import Track from "../helpers/track";
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setDefaultPermission(true)
     .setName("queue")
     .setDescription("Returns the current setlist."),
-  execute: async function (
-    commands: Collection<string, any>,
-    event: CommandInteraction,
-    player: Player
-  ) {
-    let content = "The current setlist:";
+  execute: async function ({ interaction, subscription }: CommandOptions) {
+    if (subscription) {
+      const current =
+        subscription.audioPlayer.state.status === AudioPlayerStatus.Idle
+          ? `Nothing is currently playing!`
+          : `Playing **${
+              (subscription.audioPlayer.state.resource as AudioResource<Track>)
+                .metadata.title
+            }**`;
 
-    if (player.currentTrack) {
-      const embed = createEmbed(
-        content,
-        [
-          {
-            name: `Currently playing: ${player.currentTrack.title}`,
-            value: player.currentTrack.duration,
-          },
-          ...player.queue.map(({ duration, title }, i) => ({
-            name: `${i + 1}. ${title}`,
-            value: duration,
-          })),
-        ],
-        `${event.user.username} used /queue`
-      );
+      const queue = subscription.queue
+        .slice(0, 5)
+        .map((track, index) => `${index + 1} ${track.title}`)
+        .join("\n");
 
-      event.reply({
-        embeds: [embed],
-      });
+      await interaction.reply(`${current}\n\n${queue}`);
+    } else {
+      await interaction.reply("Not playing in this server!");
     }
   },
 };
