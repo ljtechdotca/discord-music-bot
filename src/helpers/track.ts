@@ -7,6 +7,7 @@ import { raw } from "youtube-dl-exec";
 import { getInfo } from "ytdl-core-discord";
 
 interface TrackData {
+  id: string;
   url: string;
   title: string;
   onStart: () => void;
@@ -17,13 +18,15 @@ interface TrackData {
 const noop = () => {};
 
 class Track implements TrackData {
+  id: string;
   url: string;
   title: string;
   onStart: () => void;
   onFinish: () => void;
   onError: (error: Error) => void;
 
-  constructor({ url, title, onStart, onFinish, onError }: TrackData) {
+  constructor({ id, url, title, onStart, onFinish, onError }: TrackData) {
+    this.id = id;
     this.url = url;
     this.title = title;
     this.onStart = onStart;
@@ -98,6 +101,7 @@ class Track implements TrackData {
     };
 
     return new Track({
+      id: info.videoDetails.videoId,
       title: info.videoDetails.title,
       url,
       ...wrappedMethods,

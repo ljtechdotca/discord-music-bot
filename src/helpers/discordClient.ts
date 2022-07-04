@@ -19,6 +19,13 @@ export interface CommandOptions {
   interaction: CommandInteraction;
   subscription: MusicSubscription;
   subscriptions: Map<Snowflake, MusicSubscription>;
+  url?: string;
+}
+
+export interface TrackJson {
+  title: string;
+  url: string;
+  requests: number;
 }
 
 class DiscordClient {

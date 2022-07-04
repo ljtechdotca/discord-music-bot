@@ -3,12 +3,12 @@
 
 ✔ remove the _old @done(22-07-03 17:08)
 
+☐ @today track the bangers
+    update the tacks.json file whenever a song is played
+
 ☐ @today make a bangers command
     /bangers will give you the top tracks in tracks.json
         top tracks are ~10 most requested tracks
-
-☐ @today track the bangers
-    update the tacks.json file whenever a song is played
 
 ☐ @today /random track
     plays a randomly selected track from tracks.json

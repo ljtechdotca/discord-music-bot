@@ -9,6 +9,7 @@ import { GuildMember } from "discord.js";
 import { CommandOptions } from "../helpers/discordClient";
 import MusicSubscription from "../helpers/subscription";
 import Track from "../helpers/track";
+import { default as handleTracks } from "../lib/handle-tracks";
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -25,11 +26,15 @@ module.exports = {
     interaction,
     subscription,
     subscriptions,
+    url,
   }: CommandOptions) {
     await interaction.deferReply();
 
-    // @todo : currently removed the option to query via video title
-    let url = interaction.options.getString("url") as string;
+    let tracks = handleTracks.read();
+
+    if (!url) {
+      url = interaction.options.getString("url")!.split("?")[0];
+    }
 
     if (!subscription) {
       if (
@@ -89,7 +94,22 @@ module.exports = {
         },
       });
 
+      if (tracks[track.id]) {
+        tracks[track.id] = {
+          ...tracks[track.id],
+          requests: (tracks[track.id].requests += 1),
+        };
+      } else {
+        tracks[track.id] = {
+          title: track.title,
+          url: track.url,
+          requests: 1,
+        };
+      }
+
       subscription.enqueue(track);
+
+      handleTracks.write(tracks);
 
       await interaction.editReply(`Enqueued **${track.title}**`);
     } catch (error) {
