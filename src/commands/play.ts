@@ -6,6 +6,8 @@ import {
   VoiceConnectionStatus,
 } from "@discordjs/voice";
 import { GuildMember } from "discord.js";
+import yts from "yt-search";
+import ytdl from "ytdl-core";
 import { CommandOptions } from "../helpers/discordClient";
 import MusicSubscription from "../helpers/subscription";
 import Track from "../helpers/track";
@@ -33,7 +35,16 @@ module.exports = {
     let tracks = handleTracks.read();
 
     if (!url) {
-      url = interaction.options.getString("url")!.split("?")[0];
+      url = interaction.options.getString("url") as string;
+
+      const isValidUrl = ytdl.validateURL(url);
+
+      if (!isValidUrl) {
+        const { videos } = await yts(url);
+        if (videos.length > 0) {
+          url = videos[0].url as string;
+        }
+      }
     }
 
     if (!subscription) {
@@ -83,14 +94,19 @@ module.exports = {
     try {
       const track = await Track.from(url, {
         onStart() {
-          interaction.editReply("Now playing!").catch(console.warn);
+          const embed = track.embed;
+          embed.setFooter({ text: "Starting" });
+          interaction.editReply({ embeds: [embed] }).catch(console.warn);
         },
         onFinish() {
-          interaction.editReply("Now finished").catch(console.warn);
+          const embed = track.embed;
+          embed.setFooter({ text: "Starting" });
+          interaction.editReply({ embeds: [embed] }).catch(console.warn);
         },
         onError(error: Error) {
-          console.warn(error);
-          interaction.editReply(`Error: ${error.message}`).catch(console.warn);
+          interaction
+            .editReply(`Error **${error.message}**`)
+            .catch(console.warn);
         },
       });
 
@@ -111,12 +127,18 @@ module.exports = {
 
       handleTracks.write(tracks);
 
-      await interaction.editReply(`Enqueued **${track.title}**`);
+      track.embed.setFooter({ text: "Enqueued" });
+
+      await interaction.editReply({ embeds: [track.embed] });
     } catch (error) {
       console.warn(error);
-      await interaction.editReply(
-        "Failed to play track, please try again later!"
-      );
+      if (error instanceof Error) {
+        await interaction.editReply(error.message);
+      } else {
+        await interaction.editReply(
+          "Failed to play track, please try again later!"
+        );
+      }
     }
   },
 };

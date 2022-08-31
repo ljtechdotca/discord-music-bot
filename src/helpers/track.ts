@@ -3,11 +3,15 @@ import {
   createAudioResource,
   demuxProbe,
 } from "@discordjs/voice";
+import { MessageEmbed } from "discord.js";
 import { raw } from "youtube-dl-exec";
 import { getInfo } from "ytdl-core-discord";
 
+const noop = () => {};
+
 interface TrackData {
   id: string;
+  author: string;
   url: string;
   title: string;
   onStart: () => void;
@@ -15,18 +19,28 @@ interface TrackData {
   onError: (error: Error) => void;
 }
 
-const noop = () => {};
-
 class Track implements TrackData {
+  embed: MessageEmbed;
   id: string;
+  author: string;
   url: string;
   title: string;
   onStart: () => void;
   onFinish: () => void;
   onError: (error: Error) => void;
 
-  constructor({ id, url, title, onStart, onFinish, onError }: TrackData) {
+  constructor({
+    id,
+    author,
+    url,
+    title,
+    onStart,
+    onFinish,
+    onError,
+  }: TrackData) {
+    this.embed = new MessageEmbed();
     this.id = id;
+    this.author = author;
     this.url = url;
     this.title = title;
     this.onStart = onStart;
@@ -85,6 +99,15 @@ class Track implements TrackData {
   ): Promise<Track> {
     const info = await getInfo(url);
 
+    const {
+      videoDetails: {
+        author: { name },
+        title,
+        videoId,
+        thumbnails,
+      },
+    } = info;
+
     const wrappedMethods = {
       onStart() {
         wrappedMethods.onStart = noop;
@@ -100,12 +123,23 @@ class Track implements TrackData {
       },
     };
 
-    return new Track({
-      id: info.videoDetails.videoId,
-      title: info.videoDetails.title,
+    const track = new Track({
+      id: videoId,
+      author: name,
+      title: title,
       url,
       ...wrappedMethods,
     });
+
+    track.embed = new MessageEmbed()
+      .setColor(0x0099ff)
+      .setTitle(title)
+      .setURL(url)
+      .setDescription(name)
+      .setThumbnail(thumbnails[0].url)
+      .setTimestamp();
+
+    return track;
   }
 }
 

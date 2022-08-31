@@ -79,7 +79,7 @@ class DiscordClient {
     this.client.once("ready", async () => {
       color("success", "Server", "Discord Client Ready!");
 
-      this.client.guilds.cache.forEach(async (guild) => {
+      this.client.guilds.cache.forEach(async (guild: Guild) => {
         this.putCommands(guild);
       });
     });
